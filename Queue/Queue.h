@@ -4,6 +4,12 @@
 #include <iostream>
 
 template<typename T>
+class Queue;
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Queue<T>& d);
+
+template<typename T>
 class Queue
 {
     public:
@@ -13,27 +19,28 @@ class Queue
         void enqueue(const T& value);
         T    dequeue();
 
-        inline T    peek()  const;
-        inline bool empty() const;
+        inline T    peek() const;
+        inline bool is_empty() const;
+        inline std::size_t size() const;
         
         void clear();
+        
         Queue& operator=(const Queue& q) = delete;
-
+        Queue(const Queue& q) = delete;
     private:
-        Queue(const Queue& q);
-
         struct node
         {
             T value;
             node *next;
         } *head, *tail;
+        
+        std::size_t _size;
 
-    template<typename T1>
-    friend std::ostream& operator<<(std::ostream& os, const Queue<T1>& queue);
+    friend std::ostream& operator<<<>(std::ostream& os, const Queue<T>& q);
 };
 
 template<typename T>
-Queue<T>::Queue():head(nullptr), tail(nullptr)
+Queue<T>::Queue():head(nullptr), tail(nullptr), _size(0)
 {}
 
 template<typename T>
@@ -49,21 +56,23 @@ void Queue<T>::enqueue(const T& value)
     tmp->value = value;
     tmp->next  = nullptr;
     
-    if(empty())
+    if(is_empty())
     {
         head = tail = tmp;
     }
     else
     {
         tail->next = tmp;
-        tail = tmp;
+        tail       = tmp;
     }
+    
+    ++_size;
 }
 
 template<typename T>
 T Queue<T>::dequeue()
 {
-    if(empty())
+    if(is_empty())
     {
         throw "Queue is empty";
     }
@@ -74,13 +83,16 @@ T Queue<T>::dequeue()
     head = head->next;
     
     delete tmp;
+    
+    --_size;
+    
     return value;
 }
 
 template<typename T>
 inline T Queue<T>::peek() const
 {
-    if(empty())
+    if(is_empty())
     {
         throw "Queue is empty";
     }
@@ -89,7 +101,7 @@ inline T Queue<T>::peek() const
 }
 
 template<typename T>
-inline bool Queue<T>::empty() const
+inline bool Queue<T>::is_empty() const
 {
     return !head;
 }
@@ -97,7 +109,7 @@ inline bool Queue<T>::empty() const
 template<typename T>
 void Queue<T>::clear()
 {
-    while(!empty())
+    while(!is_empty())
     {
         node *tmp = head;
         head      = head->next;
@@ -108,10 +120,16 @@ void Queue<T>::clear()
     head = nullptr;
 }
 
-template<typename T1>
-std::ostream& operator<<(std::ostream& os, const Queue<T1>& q)
+template<typename T>
+inline std::size_t Queue<T>::size() const
 {
-    typename Queue<T1>::node *tmp = q.head;
+	return _size;
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Queue<T>& q)
+{
+    auto tmp = q.head;
     
     while(tmp)
     {
